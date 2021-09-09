@@ -9,11 +9,58 @@ class Moldssp
         $length = !empty($request->length) ? (int) $request->length : 25;
 
         $select = [];
+        $searchables = [];
         foreach ($request->columns as $column) {
-            array_push($select, isset($column['data']['_']) ? $column['data']['_'] : $column['data']);
+            if (isset($column['data']['_'])) {
+                array_push($select, $column['data']['_']);
+                array_push($searchables, [
+                    'relationship' => true,
+                    'column' => substr($column['data']['display'], strrpos($column['data']['display'], '.') + 1),
+                    'display' => $column['data']['display'],
+                    'reference' => $column['data']['_'],
+                    'with' => substr($column['data']['display'], 0, strrpos( $column['data']['display'], '.'))
+                ]);
+            } else {
+                array_push($select, $column['data']);
+                array_push($searchables, [
+                    'relationship' => false,
+                    'column' => $column['data'],
+                    'display' => $column['data'],
+                    'reference' => null,
+                    'with' => null
+                ]);
+            }
+
         }
 
         $query = $model->select($select);
+
+        $search_term = isset($request->search) && !empty($request->search['value']) ? $request->search['value'] : null;
+        if (!empty($search_term)) {
+            $query->where(function($q) use ($searchables, $search_term) {
+                foreach ($searchables as $k => $searchable) {
+                    if ($k === 0) {
+                        if ($searchable['relationship']) {
+                            $q->whereHas($searchable['with'], function ($subQuery) use ($searchable) {
+                                $refernce = $searchable['reference'];
+                                $subQuery->where($searchable['reference'], 'like', "%{$refernce}%");
+                            });
+                            $q->where($searchable['column'], 'like', "%{$search_term}%");
+                        } else {
+                            $q->where($searchable['column'], 'like', "%{$search_term}%");
+                        }
+                    } else {
+                        if ($searchable['relationship']) {
+                            $q->orWhereHas($searchable['with'], function ($subQuery) use ($searchable, $search_term) {
+                                $subQuery->where($searchable['column'], 'like', "%{$search_term}%");
+                            });
+                        } else {
+                            $q->orWhere($searchable['column'], 'like', "%{$search_term}%");
+                        }
+                    }
+                }
+            });
+        }
 
         $results = $query->paginate($length);
 
