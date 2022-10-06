@@ -62,6 +62,13 @@ class Moldssp
             });
         }
 
+        $order_array = $request->order;
+        if (isset($order_array[0]['column'])) {
+            $order_column = $request->columns[$order_array[0]['column']]['data'];
+            $order_direction = $order_array[0]['dir'] ?? 'asc';
+            $query->orderBy($order_column, $order_direction);
+        }
+
         $results = $query->paginate($length);
 
         $response = $results;
