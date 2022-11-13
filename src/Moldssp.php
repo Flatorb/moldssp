@@ -16,7 +16,7 @@ class Moldssp
                 array_push($searchables, [
                     'relationship' => true,
                     'column' => isset($column['data']['filter']) ? substr($column['data']['filter'], strrpos($column['data']['filter'], '.') + 1) : substr($column['data']['display'], strrpos($column['data']['display'], '.') + 1),
-                    'display' => $column['data']['display'],
+                    'display' => $column['data']['display'] ?? null,
                     'reference' => $column['data']['_'],
                     'with' => isset($column['data']['filter']) ? substr($column['data']['filter'], 0, strrpos( $column['data']['filter'], '.')) : substr($column['data']['display'], 0, strrpos( $column['data']['display'], '.'))
                 ]);
