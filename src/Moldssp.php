@@ -48,6 +48,10 @@ class Moldssp
                             $q->where($searchable['column'], 'like', "%{$search_term}%");
                         } else {
                             $q->where($searchable['column'], 'like', "%{$search_term}%");
+
+                            if (is_numeric($search_term)) {
+                                $q->orWhere($searchable['column'], floatval($search_term));
+                            }
                         }
                     } else {
                         if ($searchable['relationship']) {
@@ -56,6 +60,10 @@ class Moldssp
                             });
                         } else {
                             $q->orWhere($searchable['column'], 'like', "%{$search_term}%");
+
+                            if (is_numeric($search_term)) {
+                                $q->orWhere($searchable['column'], floatval($search_term));
+                            }
                         }
                     }
                 }
